@@ -1,0 +1,26 @@
+# Core
+psx                          # PSX data feed
+pandas>=2.0.0
+numpy>=1.24.0
+python-dotenv>=1.0.0
+
+# LangChain / LangGraph
+langchain>=0.3.0
+langchain-core>=0.3.0
+langgraph>=0.2.0
+
+# LLM Providers (install whichever you use)
+langchain-groq>=0.2.0        # Groq (recommended free option)
+langchain-google-genai>=2.0.0 # Google Gemini
+langchain-openai>=0.2.0      # OpenAI-compatible endpoints
+
+# Visualization
+plotly>=5.18.0
+streamlit>=1.38.0
+
+# Technical Analysis
+ta>=0.11.0                   # Pure-Python TA library (no C compiler needed)
+
+# Utilities
+pandas-ta>=0.3.14b
+requests>=2.31.0
