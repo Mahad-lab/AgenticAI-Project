@@ -73,12 +73,13 @@ def build_agent(llm: BaseChatModel):
     Build a LangGraph ReAct agent with all trading tools.
     Returns a compiled LangGraph graph.
     """
-    from langgraph.prebuilt import create_react_agent
+    from langchain.agents import create_agent
 
-    agent = create_react_agent(
+
+    agent = create_agent(
         model=llm,
         tools=ALL_TOOLS,
-        state_modifier=SYSTEM_PROMPT,
+        system_prompt=SystemMessage(content=SYSTEM_PROMPT),
     )
     return agent
 
