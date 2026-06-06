@@ -143,7 +143,7 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.markdown("*📌 Data via `psx` package · PSX historical data*")
+    st.markdown("*📌 Data via `psxdata` package · PSX historical data*")
 
 
 # ── Main Area ─────────────────────────────────────────────────────────────────
