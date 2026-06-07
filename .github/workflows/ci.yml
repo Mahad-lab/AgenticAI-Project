@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/ruff-action@v1
+        with:
+          args: check agent/ tools/ *.py
+      - uses: astral-sh/ruff-action@v1
+        with:
+          args: format --check agent/ tools/ *.py
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: mypy
+        run: mypy agent/ tools/ --ignore-missing-imports --follow-imports=skip
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Test
+        run: |
+          if [ -d "tests" ]; then
+            pip install pytest
+            pytest tests/ -v --tb=short
+          else
+            echo "No tests directory found — skipping tests"
+          fi
