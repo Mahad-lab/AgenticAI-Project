@@ -1,9 +1,23 @@
 [project]
-name = "agenticai-project"
-version = "0.1.0"
-description = "Add your description here"
+name = "psx-multi-agent-trader"
+version = "1.0.0"
+description = "Multi-Agent AI trading decision support system for the Pakistan Stock Exchange (PSX) — with Fibonacci analysis, Shariah compliance screening, and walk-forward backtesting."
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Mahad" },
+]
+keywords = ["psx", "pakistan-stock-exchange", "trading", "fibonacci", "shariah", "multi-agent", "ai", "langchain", "langgraph"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
 dependencies = [
     "langchain-core>=0.3.0",
     "langchain>=0.3.0",
@@ -22,3 +36,27 @@ dependencies = [
     "requests>=2.31.0",
     "psxdata>=0.1.0a3",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"app.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
