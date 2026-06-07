@@ -16,8 +16,8 @@ All three conditions must be met:
 
 ```
 1. PRICE: Close is in the 50.0%–61.8% Fibonacci retracement zone
-2. RSI:   RSI(14) < 40 (oversold — relaxed threshold for PSX)
-3. VOLUME: Volume ≥ 1.0× the 20-day average volume
+2. RSI:   RSI(14) < 47 (relaxed oversold for PSX volatility)
+3. VOLUME: Volume ≥ 0.8× the 20-day average volume
 ```
 
 #### Why these rules?
@@ -25,11 +25,13 @@ All three conditions must be met:
 **50–61.8% Fib Zone:** In trending markets, pullbacks typically retrace to
 the golden ratio zone. This is the most widely watched retracement area globally.
 
-**RSI < 40:** Standard RSI oversold is 30, but PSX stocks are more volatile.
-Relaxing to 40 captures more valid entry points while still filtering overbought.
+**RSI < 47:** Standard RSI oversold is 30. PSX stocks are more volatile and
+less liquid, so a relaxed threshold of 47 (below neutral 50) captures valid
+entry points while still filtering overbought conditions.
 
-**Volume ≥ 1× Average:** Confirms institutional interest in the pullback.
-Low-volume pullbacks are more likely to continue declining.
+**Volume ≥ 0.8× Average:** PSX stocks often trade quietly. Using 0.8×
+instead of 1.0× captures more realistic setups while still filtering out
+the lowest-volume bars.
 
 ### Exit Rules
 
@@ -186,8 +188,9 @@ All parameters are configurable in `config.py`:
 | `RISK_PER_TRADE_PCT` | 0.02 | 0.01–0.05 | Risk per trade |
 | `COMMISSION_PCT` | 0.001 | 0–0.005 | Per-side commission |
 | `RSI_PERIOD` | 14 | 10–30 | RSI lookback |
-| `RSI_OVERSOLD` | 40 | 30–50 | Oversold threshold |
+| `RSI_OVERSOLD` | 47 | 35–55 | Oversold threshold (PSX relaxed) |
 | `RSI_OVERBOUGHT` | 65 | 60–80 | Overbought threshold |
+| `VOLUME_RATIO_THRESHOLD` | 0.8 | 0.5–2.0 | Min volume ratio for entry |
 | `MA_SHORT` | 20 | 10–30 | Fast MA period |
 | `MA_LONG` | 50 | 30–200 | Slow MA period |
 | `VOLUME_MA_PERIOD` | 20 | 10–50 | Volume MA period |
