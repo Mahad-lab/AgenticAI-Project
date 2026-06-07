@@ -14,7 +14,7 @@ from langchain_core.tools import tool
 from config import (
     DEFAULT_CAPITAL_PKR, RISK_PER_TRADE_PCT, COMMISSION_PCT,
     BUY_ZONE_LOW, BUY_ZONE_HIGH, STOP_LOSS_FIB, TAKE_PROFIT_FIB,
-    RSI_OVERSOLD, RSI_OVERBOUGHT, SWING_WINDOW,
+    RSI_OVERSOLD, RSI_OVERBOUGHT, VOLUME_RATIO_THRESHOLD, SWING_WINDOW,
 )
 from tools.data_tools import fetch_ohlcv
 from tools.technical_tools import (
@@ -139,7 +139,7 @@ class FibBacktestEngine:
 
                 if (buy_low <= close <= buy_high
                         and rsi < RSI_OVERSOLD
-                        and vol_r >= 1.0
+                        and vol_r >= VOLUME_RATIO_THRESHOLD
                         and close > sl          # sanity: SL is below entry
                         and tp > close):        # sanity: TP is above entry
 

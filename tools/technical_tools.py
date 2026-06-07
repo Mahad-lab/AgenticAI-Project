@@ -10,7 +10,8 @@ from langchain_core.tools import tool
 from config import (
     FIB_LEVELS, BUY_ZONE_LOW, BUY_ZONE_HIGH, STOP_LOSS_FIB,
     RSI_PERIOD, RSI_OVERSOLD, RSI_OVERBOUGHT,
-    MA_SHORT, MA_LONG, VOLUME_MA_PERIOD, SWING_WINDOW,
+    MA_SHORT, MA_LONG, VOLUME_MA_PERIOD, VOLUME_RATIO_THRESHOLD,
+    SWING_WINDOW,
 )
 from tools.data_tools import fetch_ohlcv
 
@@ -258,8 +259,7 @@ def generate_signal(df: pd.DataFrame) -> dict:
     near_tp       = close >= level_236
     approaching   = level_50 < close <= level_382
 
-    # Volume confirmation
-    vol_ok = vol_ratio >= 1.0
+    vol_ok = vol_ratio >= VOLUME_RATIO_THRESHOLD
 
     if in_buy_zone and rsi < RSI_OVERSOLD and vol_ok:
         signal = "BUY"

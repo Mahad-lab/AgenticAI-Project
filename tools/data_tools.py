@@ -24,7 +24,7 @@ def fetch_ohlcv(ticker: str, days: int = 365) -> pd.DataFrame:
     try:
         from psxdata import stocks as psx_stocks
     except ImportError:
-        raise ImportError("Install psx with:  pip install psx")
+        raise ImportError("Install psxdata with:  pip install psxdata")
 
     end_dt   = datetime.today()
     start_dt = end_dt - timedelta(days=days)
@@ -36,15 +36,28 @@ def fetch_ohlcv(ticker: str, days: int = 365) -> pd.DataFrame:
                          "Check the symbol (e.g. 'WTL', 'KEL') and ensure "
                          "it is listed on PSX.")
 
-    df.index = pd.to_datetime(df.index)
-    df = df.sort_index().dropna()
-
-    # Normalise column names (psx sometimes returns title-cased names)
+    # Normalise column names (psxdata returns lowercase, we want title case)
     df.columns = [c.strip().title() for c in df.columns]
+
+    # psxdata returns date in a column (not index), data sorted descending
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"])
+        df = df.set_index("Date").sort_index()
+    else:
+        # Fallback: try index
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+
+    # Drop anomaly flag column if present
+    if "Is_Anomaly" in df.columns:
+        df = df.drop(columns=["Is_Anomaly"])
+
+    df = df.dropna()
+
     required = {"Open", "High", "Low", "Close", "Volume"}
     missing  = required - set(df.columns)
     if missing:
-        raise ValueError(f"Unexpected columns from psx for '{ticker}': "
+        raise ValueError(f"Unexpected columns from psxdata for '{ticker}': "
                          f"{df.columns.tolist()}  — missing {missing}")
 
     return df[["Open", "High", "Low", "Close", "Volume"]].copy()
