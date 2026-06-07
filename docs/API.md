@@ -174,8 +174,9 @@ Normalized multi-stock performance comparison (base=100).
 | `STOP_LOSS_FIB` | `0.786` | Stop at 78.6% |
 | `TAKE_PROFIT_FIB` | `0.236` | TP at 23.6% |
 | `RSI_PERIOD` | `14` | RSI lookback |
-| `RSI_OVERSOLD` | `40` | Oversold threshold |
+| `RSI_OVERSOLD` | `47` | Oversold threshold (PSX relaxed) |
 | `RSI_OVERBOUGHT` | `65` | Overbought threshold |
+| `VOLUME_RATIO_THRESHOLD` | `0.8` | Min volume ratio for entry |
 | `MA_SHORT` | `20` | Fast MA |
 | `MA_LONG` | `50` | Slow MA |
 | `VOLUME_MA_PERIOD` | `20` | Volume MA |
