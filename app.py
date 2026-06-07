@@ -1,21 +1,19 @@
 """
 app.py — PSX Trading Decision Support System
-Streamlit UI: Chat agent + Charts + Backtest panel
+Streamlit UI: Multi-Agent Chat + Charts + Backtest panel
 """
 import os
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# ── Page Config (must be first Streamlit call) ────────────────────────────────
 st.set_page_config(
-    page_title="PSX Trading Analyst",
+    page_title="PSX Multi-Agent Trading Analyst",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
   .stApp { background: #0d1117; }
@@ -28,14 +26,18 @@ st.markdown("""
   .signal-wait   { background: #1c2128; border-left: 4px solid #8b949e; color: #8b949e; }
   .metric-card   { background: #161b22; border-radius: 8px; padding: 12px; text-align: center; }
   div[data-testid="stChatMessage"] { background: #161b22 !important; border-radius: 8px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 6px; }
+  .badge-single { background: #1a3a5c; color: #58a6ff; }
+  .badge-multi  { background: #2d1b5e; color: #bc8cff; }
+  .agent-tag { font-size: 0.75rem; color: #8b949e; margin-bottom: 2px; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Session State Defaults ────────────────────────────────────────────────────
 def _init_state():
     defaults = {
         "agent":         None,
+        "supervisor":    None,
         "chat_history":  [],
         "provider":      "groq",
         "api_key":       "",
@@ -43,6 +45,7 @@ def _init_state():
         "last_ticker":   "WTL",
         "last_days":     365,
         "last_capital":  5000,
+        "agent_mode":    "multi",  # "single" | "multi"
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -51,11 +54,9 @@ def _init_state():
 _init_state()
 
 
-# ── Sidebar — Configuration ───────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
 
-    # LLM Provider
     provider = st.selectbox(
         "LLM Provider",
         ["groq", "gemini", "openai_compatible"],
@@ -84,31 +85,71 @@ with st.sidebar:
         )
         os.environ["OAI_BASE_URL"] = base_url
 
+    st.divider()
+
+    # ── Agent Mode Selection ──────────────────────────────────────────────
+    st.markdown("## 🤖 Agent Mode")
+
+    mode_help = {
+        "multi": "Multi-Agent: Supervisor delegates to 3 specialist sub-agents "
+                 "(Technical, Shariah, Risk). More thorough and role-based.",
+        "single": "Single Agent: One ReAct agent with all tools. Simple and fast.",
+    }
+    agent_mode = st.radio(
+        "Mode",
+        options=["multi", "single"],
+        index=0 if st.session_state.agent_mode == "multi" else 1,
+        help=mode_help[st.session_state.agent_mode],
+        format_func=lambda x: {
+            "multi": "🌐 Multi-Agent (Supervisor + Specialists)",
+            "single": "🔹 Single Agent (All Tools)",
+        }.get(x, x),
+    )
+    st.session_state.agent_mode = agent_mode
+
+    if agent_mode == "multi":
+        st.caption(
+            "Supervisor → Technical Analyst, Shariah Analyst, Risk Analyst"
+        )
+
     # Init Agent button
     if st.button("🚀 Connect Agent", use_container_width=True, type="primary"):
         if not api_key:
             st.error("Enter your API key first.")
         else:
-            with st.spinner("Connecting to LLM…"):
+            with st.spinner(f"Connecting {agent_mode} agent…"):
                 try:
-                    from agent.trading_agent import get_llm, build_agent
-                    llm   = get_llm(provider=provider, api_key=api_key)
-                    agent = build_agent(llm)
-                    st.session_state.agent       = agent
+                    from agent.trading_agent import get_llm
+                    llm = get_llm(provider=provider, api_key=api_key)
+
+                    if agent_mode == "multi":
+                        from agent.supervisor_agent import PSXTradingSupervisor
+                        supervisor = PSXTradingSupervisor(llm)
+                        st.session_state.supervisor   = supervisor
+                        st.session_state.agent        = None
+                    else:
+                        from agent.trading_agent import build_agent
+                        agent = build_agent(llm)
+                        st.session_state.agent        = agent
+                        st.session_state.supervisor   = None
+
                     st.session_state.agent_ready = True
-                    st.success("✅ Agent ready!")
+                    st.success(f"✅ {agent_mode.title()} agent ready!")
                 except Exception as e:
                     st.error(f"Connection failed: {e}")
 
     # Status indicator
     if st.session_state.agent_ready:
-        st.markdown("🟢 **Agent connected**")
+        mode = st.session_state.agent_mode
+        if mode == "multi":
+            st.markdown("🟣 **Multi-Agent connected**")
+        else:
+            st.markdown("🟢 **Single Agent connected**")
     else:
         st.markdown("🔴 **Agent not connected**")
 
     st.divider()
 
-    # Trading parameters
     st.markdown("## 📊 Chart & Backtest")
     selected_ticker = st.text_input(
         "Ticker Symbol", value=st.session_state.last_ticker,
@@ -131,7 +172,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Quick access stocks
     st.markdown("## ⚡ Quick Select")
     watchlist = ["WTL", "CNERGY", "UNITY", "KEL", "LOTCHEM",
                  "MLCF", "SNGP", "KAPCO", "PAEL", "PIBTL"]
@@ -147,20 +187,23 @@ with st.sidebar:
 
 
 # ── Main Area ─────────────────────────────────────────────────────────────────
-st.markdown('<p class="main-title">📈 PSX Trading Analyst</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">📈 PSX Multi-Agent Trading Analyst</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="sub-title">Fibonacci · Elliott Wave · Shariah-Compliant · Agentic AI</p>',
+    '<p class="sub-title">'
+    'Fibonacci · Elliott Wave · Shariah-Compliant · Multi-Agent AI · Pakistan Stock Exchange'
+    '</p>',
     unsafe_allow_html=True,
 )
 
-# Two-column layout: Chat (left) | Charts (right)
 chat_col, chart_col = st.columns([1, 1], gap="large")
 
 # ── LEFT: AI Agent Chat ───────────────────────────────────────────────────────
 with chat_col:
-    st.markdown("### 🤖 AI Trading Analyst")
+    mode = st.session_state.agent_mode
+    mode_label = "🌐 Multi-Agent" if mode == "multi" else "🔹 Single Agent"
+    st.markdown(f"### 🤖 AI Trading Analyst  <span class='badge badge-{mode}'>{mode_label}</span>",
+                unsafe_allow_html=True)
 
-    # Suggested prompts
     if not st.session_state.chat_history:
         st.markdown("**Try asking:**")
         suggestions = [
@@ -176,20 +219,17 @@ with chat_col:
                 st.session_state["pending_input"] = sug
                 st.rerun()
 
-    # Chat history display
     chat_container = st.container(height=420)
     with chat_container:
         for msg in st.session_state.chat_history:
             with st.chat_message(msg["role"], avatar="🧑" if msg["role"] == "user" else "🤖"):
                 st.markdown(msg["content"])
 
-    # Input box
     user_input = st.chat_input(
         "Ask about a stock, Fibonacci levels, signals, backtest…",
         disabled=not st.session_state.agent_ready,
     )
 
-    # Handle pending input from suggestion buttons
     if "pending_input" in st.session_state and st.session_state.pending_input:
         user_input = st.session_state.pop("pending_input")
 
@@ -209,16 +249,22 @@ with chat_col:
                     response_box = st.empty()
                     full_response = ""
 
-                    from agent.trading_agent import stream_query
                     with st.spinner("Thinking…"):
                         try:
-                            for chunk in stream_query(
-                                st.session_state.agent,
-                                user_input,
-                                st.session_state.chat_history[:-1],
-                            ):
-                                full_response = chunk
-                                response_box.markdown(full_response + " ▌")
+                            if st.session_state.agent_mode == "multi":
+                                supervisor = st.session_state.supervisor
+                                for chunk in supervisor.stream(user_input):
+                                    full_response = chunk
+                                    response_box.markdown(full_response + " ▌")
+                            else:
+                                from agent.trading_agent import stream_query
+                                for chunk in stream_query(
+                                    st.session_state.agent,
+                                    user_input,
+                                    st.session_state.chat_history[:-1],
+                                ):
+                                    full_response = chunk
+                                    response_box.markdown(full_response + " ▌")
                             response_box.markdown(full_response)
                         except Exception as e:
                             full_response = f"⚠️ Agent error: {e}"
@@ -257,7 +303,6 @@ with chart_col:
                     sig = generate_signal(df)
                     fig = create_price_chart(df, ticker)
 
-                    # Signal banner
                     signal = sig["signal"]
                     signal_class = {
                         "BUY":             "signal-buy",
@@ -277,7 +322,6 @@ with chart_col:
                         unsafe_allow_html=True,
                     )
 
-                    # Quick metrics
                     m1, m2, m3, m4 = st.columns(4)
                     fib = sig["fib_levels"]
                     m1.metric("Buy Zone Low",  f"{fib.get('61.8', 0):.3f}")
@@ -287,7 +331,6 @@ with chart_col:
 
                     st.plotly_chart(fig, use_container_width=True)
 
-                    # Wave info
                     wave = sig["wave"]
                     st.caption(
                         f"🌊 **Elliott Wave**: {wave['trend']} — {wave['description']}"
@@ -315,7 +358,6 @@ with chart_col:
                     if "error" in metrics:
                         st.warning(metrics["error"])
                     else:
-                        # Performance metrics
                         col1, col2, col3, col4 = st.columns(4)
                         col1.metric(
                             "Total Return",
@@ -339,7 +381,6 @@ with chart_col:
                             f"Start: {metrics['start_capital']:.0f}",
                         )
 
-                        # Equity curve
                         eq_fig = create_equity_chart(
                             metrics["equity_curve"],
                             metrics["trades"],
@@ -348,7 +389,6 @@ with chart_col:
                         )
                         st.plotly_chart(eq_fig, use_container_width=True)
 
-                        # Trade log table
                         if not trades_df.empty:
                             st.markdown("#### Trade Log")
                             display_cols = [
@@ -360,7 +400,6 @@ with chart_col:
                                 [c for c in display_cols if c in trades_df.columns]
                             ].copy()
 
-                            # Colour rows
                             def style_row(row):
                                 color = "#0d3322" if row.get("won", False) else "#3b1111"
                                 return [f"background-color: {color}"] * len(row)
@@ -396,7 +435,6 @@ with chart_col:
                     st.error(f"Comparison error: {e}")
 
 
-# ── Footer ────────────────────────────────────────────────────────────────────
 st.divider()
 st.caption(
     "⚠️ **Disclaimer:** This tool is for educational and decision-support purposes only. "

@@ -78,8 +78,9 @@ STOP_LOSS_FIB = 0.786   # Stop loss below 78.6%
 TAKE_PROFIT_FIB = 0.236 # Target: 23.6% retracement (near top)
 
 RSI_PERIOD       = 14
-RSI_OVERSOLD     = 40   # Slightly relaxed for PSX volatility
+RSI_OVERSOLD     = 47   # Relaxed for PSX volatility (standard is 30; PSX needs 45-50)
 RSI_OVERBOUGHT   = 65
 MA_SHORT         = 20
 MA_LONG          = 50
 VOLUME_MA_PERIOD = 20
+VOLUME_RATIO_THRESHOLD = 0.8   # Min vol ratio for entry (1.0 = average); PSX often quieter
