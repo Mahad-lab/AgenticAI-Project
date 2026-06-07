@@ -78,8 +78,8 @@ Built with a collaborative multi-agent AI system, Fibonacci analysis, Shariah co
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/agenticai-project.git
-cd agenticai-project
+git clone https://github.com/Mahad-lab/AgenticAI-Project.git
+cd AgenticAI-Project
 
 # 2. Install dependencies
 pip install -r requirements.txt
