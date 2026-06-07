@@ -1,5 +1,5 @@
 """
-tools/data_tools.py — PSX data fetching via the `psx` pip package
+tools/data_tools.py — PSX data fetching via the `psxdata` pip package
 """
 from __future__ import annotations
 
@@ -15,14 +15,14 @@ from langchain_core.tools import tool
 
 def fetch_ohlcv(ticker: str, days: int = 365) -> pd.DataFrame:
     """
-    Fetch OHLCV data from PSX using the `psx` package.
+    Fetch OHLCV data from PSX using the `psxdata` package.
 
     Returns a DataFrame with DatetimeIndex and columns:
         Open, High, Low, Close, Volume
     Sorted ascending by date, NaN rows dropped.
     """
     try:
-        from psx import stocks as psx_stocks
+        from psxdata import stocks as psx_stocks
     except ImportError:
         raise ImportError("Install psx with:  pip install psx")
 
